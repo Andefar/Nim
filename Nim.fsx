@@ -37,42 +37,36 @@ type AsyncEventQueue<'T>() =
 
 
 // Automaton, Controller
+type heap = int * char
 type Message = 
-    | Input of int * char | Clear | Cancel | IllegalInput| Legal
+    | Input of heap | Clear | Cancel | IllegalInput| Legal
+
 
 let input = 0;;
-let heap1 = '1';;
-let heap2 = '2';;
-let heap3 = '3';;
+let heap1 = (10,'1');;
+let heap2 = (10,'2');;
+let heap3 = (10,'3');;
 
 let heaps = [heap1;heap2;heap3]
-let n1 = 10
-let n2 = 10
-let n3 = 10
 let eventQ = AsyncEventQueue()
 
 let rec initGame() =
-    async{
-          Gui.updateHeap 10 heap1
-          Gui.updateHeap 10 heap2
-          Gui.updateHeap 10 heap3
-          printf("Init")
+    async{printf("Init")
+          List.iter (fun (i,n) -> Gui.updateHeap i n) heaps
+          
           return! ready()}
 
 and ready() = 
     async {printf("Ready")
-           Gui.updateHeap n1 heap1
-           Gui.updateHeap n2 heap2
-           Gui.updateHeap n3 heap3
            Gui.disable [Gui.newGame]
 
            let! input = eventQ.Receive()
            match input with
-           | Input (i,h)    -> return! checkInput i h
+           | Input (i,h)    -> return! checkInput i h 
            | Clear          -> return! ready()
            | _              -> failwith("Ready: You fool")}
 
-and checkInput i h  = 
+and checkInput i h = 
     async {printf("checkInput") 
            Gui.updateHeap i h
            

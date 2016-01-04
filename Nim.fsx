@@ -11,6 +11,8 @@ open System.Threading
 open System.Windows.Forms 
 open System.Drawing 
 
+//ad sd 
+
 // An asynchronous event queue kindly provided by Don Syme 
 type AsyncEventQueue<'T>() = 
     let mutable cont = None 

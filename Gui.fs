@@ -44,6 +44,13 @@ let newGame =
   new Button(Location=Point(200,220),MinimumSize=Size(100,50),
               MaximumSize=Size(100,50),Text="Start New Game")
 
+let hintBut =
+  new Button(Location=Point(420,240),MinimumSize=Size(50,25),
+              MaximumSize=Size(25,25),Text="hint(3)")
+
+let hint =
+  new Label(Location=Point(470,240),Size=Size(50,25),Text="")
+
 let disable bs = 
     for b in [heap1;heap2;heap2] do 
         b.Enabled  <- true
@@ -72,6 +79,16 @@ let printMessage str =
 let showInput str = 
     input.Text <- str
 
+let showHint str = 
+    hint.Text <- str
+    hint.AutoSize <- false
+    hint.TextAlign <- ContentAlignment.MiddleCenter 
+
+let showHintsLeft str = 
+    hintBut.Text <- str
+    hintBut.AutoSize <- false
+    hintBut.TextAlign <- ContentAlignment.MiddleCenter 
+
 let initGui = 
     window.Controls.Add messages
     window.Controls.Add matchDesc
@@ -83,4 +100,6 @@ let initGui =
     window.Controls.Add heap2
     window.Controls.Add heap3
     window.Controls.Add newGame
+    window.Controls.Add hintBut
+    window.Controls.Add hint
 

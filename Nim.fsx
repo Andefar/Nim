@@ -1,8 +1,9 @@
-﻿(*
+﻿#load "Gui.fs"
+
+(*
 Arthurs: Andreas & Silas
 Januarkursus - 2015
 *)
-
 
 // Prelude
 open System 
@@ -10,8 +11,6 @@ open System.Net
 open System.Threading 
 open System.Windows.Forms 
 open System.Drawing 
-
-//ad sd 
 
 // An asynchronous event queue kindly provided by Don Syme 
 type AsyncEventQueue<'T>() = 
@@ -37,66 +36,74 @@ type AsyncEventQueue<'T>() =
 
 
 
-
 // Automaton, Controller
 type Message = 
-    | Input of int | Clear | Cancel | IllegalInput| Legal
+    | Input of int * char | Clear | Cancel | IllegalInput| Legal
 
 let input = 0;;
 let heap1 = '1';;
 let heap2 = '2';;
 let heap3 = '3';;
 
+let heaps = [heap1;heap2;heap3]
+let n1 = 10
+let n2 = 10
+let n3 = 10
 let eventQ = AsyncEventQueue()
 
-
-
 let rec initGame() =
-    async{Gui.UpdateHeap 10 heap1
-          Gui.UpdateHeap 10 heap2
-          Gui.UpdateHeap 10 heap3
-          
+    async{
+          Gui.updateHeap 10 heap1
+          Gui.updateHeap 10 heap2
+          Gui.updateHeap 10 heap3
+          printf("Init")
           return! ready()}
 
 and ready() = 
-    async {Gui.UpdateHeap n1 heap1
-           Gui.UpdateHeap n2 heap2
-           Gui.UpdateHeap n3 heap3
-
-           disable [newGameButton]
+    async {printf("Ready")
+           Gui.updateHeap n1 heap1
+           Gui.updateHeap n2 heap2
+           Gui.updateHeap n3 heap3
+           Gui.disable [Gui.newGame]
 
            let! input = eventQ.Receive()
            match input with
-           | Input i    -> return! checkInput(i)
-           | Clear      -> return! ready()
-           | _          -> failwith("Ready: You fool")}
+           | Input (i,h)    -> return! checkInput i h
+           | Clear          -> return! ready()
+           | _              -> failwith("Ready: You fool")}
 
-and checkInput(i,h) = 
-    async {
-           Gui.UpdateInputBox "Checking input"
+and checkInput i h  = 
+    async {printf("checkInput") 
+           Gui.updateHeap i h
            
            // TODO: Check input
-           return! ready()}
+           return! checkStatus()}
 
 and checkStatus() = 
-    async {if (List.forall (fun x -> x=0) [heap1;heap2;heap3]) then finished()
-           else computer()
+    async {printf("checkStatus")
+           return! ready()
+//           if (List.forall (fun x -> x=0) [n1;n2;n3]) then finished()
+//           else computer()
            }
 
-and finished() = 
-    async {Gui.UpdateHeap n1 heap1
-           Gui.UpdateHeap n2 heap2
-           Gui.UpdateHeap n3 heap3
-           
-           let! msg = eventQ.Receive()
-           match msg with
-           | NewGame -> return! initGame()
-           | _       -> failwith "finished: You fool!"
-    }
-and computer() = 
-    async {Gui.UpdateHeap n1 heap1
-           Gui.UpdateHeap n2 heap2
-           Gui.UpdateHeap n3 heap3
-           
-           return! ready()}
+//and finished() = 
+//    async {initGame()
+//           return! ready()}
 
+//and computer() = 
+//    async {Gui.UpdateHeap n1 heap1
+//           Gui.UpdateHeap n2 heap2
+//           Gui.UpdateHeap n3 heap3
+//           
+//           return! ready()}
+
+let addListeners = 
+    Gui.heap1.Click.Add (fun _ -> eventQ.Post (Input (int(Gui.input.Text),'1')))
+    Gui.heap2.Click.Add (fun _ -> eventQ.Post (Input (int(Gui.input.Text),'2')))
+    Gui.heap3.Click.Add (fun _ -> eventQ.Post (Input (int(Gui.input.Text),'3')))
+
+let startGame =
+    Gui.initGui
+    addListeners
+    Gui.window.Show()
+    Async.StartImmediate (initGame())

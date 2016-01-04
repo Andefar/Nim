@@ -1,5 +1,6 @@
 module Gui
 
+
 open System
 open System.Drawing
 open System.Windows.Forms
@@ -40,16 +41,13 @@ let updateHeap n heap =
     | '3' -> (heap3.Text <- string(n))
     | _       -> failwith "heap does not exist"
 
-let initGui _ = 
+let initGui = 
     window.Controls.Add input
     window.Controls.Add heap1
     window.Controls.Add heap2
     window.Controls.Add heap3
     //This is tests. Eventlisteners must call nim-model functions and not gui functions
-    heap1.Click.Add (fun _ -> updateHeap input.Text '1')
-    heap2.Click.Add (fun _ -> updateHeap input.Text '2')
-    heap3.Click.Add (fun _ -> updateHeap input.Text '3')
-    Application.Run(window)
+//    Application.Run(window)
 
 //
 //window.Controls.Add input

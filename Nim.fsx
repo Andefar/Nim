@@ -211,4 +211,6 @@ TODO list:
     - tjek om kan man vælge 0?
     - GUI: samle show metoderne til én metode
     - Lave andre extension
+    - fix regel 2 i computerens strategi
+    - lav computer ryk til async (push/receive) (l. 187)
 *)

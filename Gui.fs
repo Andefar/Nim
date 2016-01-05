@@ -40,6 +40,10 @@ let heap3 =
   new Button(Location=Point(350,160),MinimumSize=Size(100,40),
               MaximumSize=Size(100,50),Text="")
 
+let cancel =
+  new Button(Location=Point(350,75),MinimumSize=Size(60,25),
+              MaximumSize=Size(100,50),Text="Cancel")
+
 let newGame =
   new Button(Location=Point(200,220),MinimumSize=Size(100,50),
               MaximumSize=Size(100,50),Text="Start New Game")
@@ -101,6 +105,7 @@ let initGui() =
     window.Controls.Add heap1
     window.Controls.Add heap2
     window.Controls.Add heap3
+    window.Controls.Add cancel
     window.Controls.Add newGame
     window.Controls.Add hintBut
     window.Controls.Add hint

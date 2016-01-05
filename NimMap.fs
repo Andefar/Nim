@@ -15,6 +15,7 @@ let findMax (N heap)          = List.maxBy snd (Map.toList heap)
 let getMap (N heap)           = heap
 let win (N heap)              = Map.forall (fun _ value -> value = 0) heap
 
+
 let calcOptimal map =
     let m = getM map
     if(m <> 0) then

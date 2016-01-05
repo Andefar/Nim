@@ -89,6 +89,7 @@ and loading(url) =
           // start the load
          Async.StartWithContinuations
              (async { let webCl = new WebClient()
+                      
                       let! html = webCl.AsyncDownloadString(Uri url)
                       return html },
               (fun html -> ev.Post (Web html)),

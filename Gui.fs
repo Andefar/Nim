@@ -4,7 +4,6 @@ module Gui
 open System
 open System.Drawing
 open System.Windows.Forms
-open System.Windows.Forms
 
     // The window part
 let window =

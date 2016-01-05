@@ -81,7 +81,6 @@ let updateGUI map = Map.iter (fun key value -> Gui.updateHeap key value) (NimMap
 
 let rec initGame() =
     async{Gui.printMessage "Welcome! Enter number of matches you want to remove and select a heap"
-          Gui.enable [Gui.heap1;Gui.heap2;Gui.heap3];
           heaps <- NimMap.make 12
           first <- true
           hintsLeft <- 3
@@ -92,6 +91,8 @@ let rec initGame() =
 
 and ready() = 
     async{let b = Gui.input.Focus()
+          Gui.enable [Gui.heap1;Gui.heap2;Gui.heap3; Gui.newGame]
+          
           if cancelBool then cancelBool <- false
           elif not first && playersTurn then Gui.printMessage ("The computer removed "+lastComValue+" matches from heap "+lastComHeap)
           
@@ -105,6 +106,7 @@ and ready() =
                               if hintsLeft>0 then hintsLeft <- hintsLeft-1
                               Gui.showHintsLeft ("hint("+(string hintsLeft)+")")
                               return! ready()
+          | Restart        -> return! initGame()
           | Cancel         -> cancelBool <- true
                               Gui.printMessage ("Nothing to cancel")
                               return! ready()
@@ -128,7 +130,6 @@ and checkStatus() =
            Gui.showHint ""
            if (NimMap.win heaps) then return! finished()
            elif playersTurn then
-                Gui.enable [Gui.heap1;Gui.heap2;Gui.heap3]
                 return! ready()
            else return! computer()
            }

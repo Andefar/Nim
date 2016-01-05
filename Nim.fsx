@@ -51,6 +51,7 @@ let mutable heaps = NimMap.make 12
 let mutable first = true
 let mutable playersTurn = true
 let mutable cancelBool = false
+let mutable illegalAction = false
 let mutable lastComHeap = ""
 let mutable lastComValue = ""
 let mutable hintsLeft = 3
@@ -109,8 +110,7 @@ and ready() =
           | _              -> return! ready()}
 
 and checkInput h i = 
-    async {printfn "%i" i
-           first <- false
+    async {first <- false
            playersTurn <- false
            Async.StartImmediate (checkValidInputAndMove h i heaps)
            let! input = eventQ.Receive()
@@ -148,13 +148,21 @@ and computer() =
            Gui.disable [Gui.heap1;Gui.heap2;Gui.heap3]
            playersTurn <- true
 
+           if (cancelBool) then
+             let! msg = eventQ.Receive()
+             match msg with
+             | Cancelled -> Gui.printMessage "Wait until it's your turn"
+             | _         -> failwith "whaaaaat"
+             cancelBool <- false
+           
            Async.StartWithContinuations
-               (async{let! input = moveComp heaps
-                      return input}, 
-               (fun input -> eventQ.Post input),
-               (fun _ -> eventQ.Post Error),
-               (fun _ -> eventQ.Post Cancelled),
-               ts.Token)
+                (async{let! input = moveComp heaps 
+                return input}, 
+                (fun input -> eventQ.Post input),
+                (fun _ -> eventQ.Post Error),
+                (fun _ -> cancelBool <- true
+                          eventQ.Post Cancelled),
+                ts.Token)
 
            let! msg = eventQ.Receive()
            match msg with
@@ -167,12 +175,11 @@ and computer() =
                        return! computer()}
 
 and cancel() = 
-    async{cancelBool <- true
-          heaps <- oldMap
+    async{heaps <- oldMap
           let! msg = eventQ.Receive()
           match msg with
           | Cancelled | Error -> return! checkStatus()
-          | _                 -> failwith "cancel fail"}
+          | _                 -> failwith ("cancel fail" + string(msg))}
 
 let addListeners() = 
     Gui.heap1.Click.Add (fun _ -> eventQ.Post (Input ("1",Gui.text())))

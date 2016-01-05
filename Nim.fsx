@@ -46,15 +46,15 @@ type heap = string * int
 type Message = 
     | Input of heap | Cancel | IllegalInput | Legal | Restart | Hint | Error | Cancelled
 
-let mutable oldMap = NimMap.make 10
-let mutable heaps = NimMap.make 10
+let mutable oldMap = NimMap.make 12
+let mutable heaps = NimMap.make 12
 let mutable first = true
 let mutable playersTurn = true
 let mutable cancelBool = false
 let mutable illegalAction = false
 let mutable lastComHeap = ""
 let mutable lastComValue = ""
-let mutable hintsLeft = 7
+let mutable hintsLeft = 3
 
 let eventQ = AsyncEventQueue()
 
@@ -70,7 +70,7 @@ let checkValidInputAndMove h i map  =
             eventQ.Post IllegalInput}
 
 let moveComp map = 
-    async{do! Async.Sleep(1000)
+    async{do! Async.Sleep(3000)
           let optimal = NimMap.calcOptimal map
           oldMap <- map
           heaps <- NimMap.update (fst optimal) (snd optimal) map
@@ -84,9 +84,9 @@ let updateGUI map = Map.iter (fun key value -> Gui.updateHeap key value) (NimMap
 let rec initGame() =
     async{Gui.printMessage "Welcome! Enter number of matches you want to remove and select a heap"
           Gui.enable [Gui.heap1;Gui.heap2;Gui.heap3];
-          heaps <- NimMap.make 10
+          heaps <- NimMap.make 12
           first <- true
-          hintsLeft <- 7
+          hintsLeft <- 3
           Gui.showHintsLeft ("hint("+(string hintsLeft)+")")
           Gui.disable [Gui.newGame]
           updateGUI heaps
@@ -193,8 +193,8 @@ let startGame() =
     Gui.initGui()
     addListeners()
     Async.StartImmediate (initGame())
-//    Gui.window.Show()
-    Application.Run(Gui.window)
+    Gui.window.Show()
+//    Application.Run(Gui.window)
  
 startGame()
 

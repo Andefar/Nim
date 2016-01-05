@@ -1,8 +1,6 @@
 ﻿#load "Gui.fs"
 #load "NimMap.fs"
 
-let h = NimMap.make 12
-
 (*
 Authors: Andreas & Silas
 Januarkursus - 2015
@@ -94,9 +92,9 @@ let rec initGame() =
 
 and ready() = 
     async{let b = Gui.input.Focus()
-          if cancelBool then Gui.printMessage ("You cancelled. Make a match partner ! :=)")
+          if cancelBool then cancelBool <- false
           elif not first && playersTurn then Gui.printMessage ("The computer removed "+lastComValue+" matches from heap "+lastComHeap)
-          cancelBool <- false
+          
           let! input = eventQ.Receive()
           match input with
           | Input (h,i)    -> return! checkInput h i 
@@ -106,6 +104,9 @@ and ready() =
                               else Gui.showHint "LOL"
                               if hintsLeft>0 then hintsLeft <- hintsLeft-1
                               Gui.showHintsLeft ("hint("+(string hintsLeft)+")")
+                              return! ready()
+          | Cancel         -> cancelBool <- true
+                              Gui.printMessage ("Nothing to cancel")
                               return! ready()
           | _              -> return! ready()}
 
@@ -120,7 +121,8 @@ and checkInput h i =
            | _              -> failwith "checkinput failed"}
 
 and checkStatus() = 
-    async {updateGUI heaps
+    async {printfn "%b" playersTurn
+           updateGUI heaps
            printCollection "" (NimMap.getMap heaps)
            Gui.showInput ""
            Gui.showHint ""
@@ -145,8 +147,9 @@ and finished() =
 and computer() = 
     async {use ts = new CancellationTokenSource()
            
-           Gui.disable [Gui.heap1;Gui.heap2;Gui.heap3]
            playersTurn <- true
+
+           Gui.disable [Gui.heap1;Gui.heap2;Gui.heap3]
 
            if (cancelBool) then
              let! msg = eventQ.Receive()
@@ -171,6 +174,7 @@ and computer() =
            | Cancel -> ts.Cancel()
                        return! cancel()
            | _      -> ts.Cancel()
+                       cancelBool <- true
                        Gui.showHint "Too fast"
                        return! computer()}
 
@@ -178,7 +182,8 @@ and cancel() =
     async{heaps <- oldMap
           let! msg = eventQ.Receive()
           match msg with
-          | Cancelled | Error -> return! checkStatus()
+          | Cancelled | Error -> Gui.printMessage ("You cancelled. Make a match partner ! :=)")
+                                 return! checkStatus()
           | _                 -> failwith ("cancel fail" + string(msg))}
 
 let addListeners() = 

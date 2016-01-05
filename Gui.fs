@@ -4,6 +4,7 @@ module Gui
 open System
 open System.Drawing
 open System.Windows.Forms
+open System.Text.RegularExpressions
 
     // The window part
 let window =
@@ -70,11 +71,13 @@ let updateHeap heap (n:int) =
     | "3" -> (heap3.Text <- string(n))
     | _       -> failwith "heap does not exist"
 
+let text() = if (Regex.Match(input.Text,"^\d+$").Success) then int(input.Text) else 0 
+
 let printMessage str = 
     messages.Text <- str
     messages.AutoSize <- false
-    messages.TextAlign <- ContentAlignment.MiddleCenter 
-
+    messages.TextAlign <- ContentAlignment.MiddleCenter
+     
 let showInput str = 
     input.Text <- str
 
@@ -88,7 +91,7 @@ let showHintsLeft str =
     hintBut.AutoSize <- false
     hintBut.TextAlign <- ContentAlignment.MiddleCenter 
 
-let initGui = 
+let initGui() = 
     window.Controls.Add messages
     window.Controls.Add matchDesc
     window.Controls.Add input

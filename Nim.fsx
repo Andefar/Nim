@@ -55,7 +55,7 @@ let mutable hintsLeft = 3
 let checkValidInputAndMove h i map  = 
     let curMatches = (NimMap.find h map) - i
 
-    if (curMatches >= 0 && i >= 0) then 
+    if (curMatches >= 0 && i > 0) then 
          heaps <- NimMap.update h curMatches heaps
          Legal
      else
@@ -85,9 +85,10 @@ let rec initGame() =
           return! ready()}
 
 and ready() = 
-    async {
+    async {let b = Gui.input.Focus()
            if not first && playersTurn then Gui.printMessage ("The computer removed "+lastComValue+" matches from heap "+lastComHeap)
            let! input = eventQ.Receive()
+
            match input with
            | Input (h,i)    -> return! checkInput h i 
            | Clear          -> return! ready()
@@ -101,7 +102,7 @@ and ready() =
            | _              -> failwith("Ready: You fool")}
 
 and checkInput h i = 
-    async {
+    async {printfn "%i" i
            first <- false
            playersTurn <- false
            let input = checkValidInputAndMove h i heaps
@@ -137,33 +138,31 @@ and computer() =
     async {Gui.disable [Gui.heap1;Gui.heap2;Gui.heap3]
            playersTurn <- true
            let input = moveComp heaps
-//           printCollection "" (NimMap.getMap heaps)
            match input with
            | Legal    -> return! checkStatus()
            | _        -> failwith("computers move fail: You fool")}
 
-let addListeners = 
-    Gui.heap1.Click.Add (fun _ -> eventQ.Post (Input ("1",int(Gui.input.Text))))
-    Gui.heap2.Click.Add (fun _ -> eventQ.Post (Input ("2",int(Gui.input.Text))))
-    Gui.heap3.Click.Add (fun _ -> eventQ.Post (Input ("3",int(Gui.input.Text))))
+
+let addListeners() = 
+    Gui.heap1.Click.Add (fun _ -> eventQ.Post (Input ("1",Gui.text())))
+    Gui.heap2.Click.Add (fun _ -> eventQ.Post (Input ("2",Gui.text())))
+    Gui.heap3.Click.Add (fun _ -> eventQ.Post (Input ("3",Gui.text())))
     Gui.newGame.Click.Add (fun _ -> eventQ.Post Restart)
     Gui.hintBut.Click.Add (fun _ -> eventQ.Post Hint)
 
-let startGame =
-    Gui.initGui
-    addListeners
+let startGame() =
+    Gui.initGui()
+    addListeners()
     Async.StartImmediate (initGame())
     Gui.window.Show()
 //    Application.Run(Gui.window)
  
+startGame()
+
 (*
 TODO list: 
     - fix Gui.disable så man ikke kan trykke på knapper selvom man har disabled dem
-    - samle redundant kode i metode (calcOptimal and moveComp)
-    - tjek om computer strategi er korrekt mht. om random valgte træk
-    - tjek om kan man vælge 0?
     - GUI: samle show metoderne til én metode
     - Lave andre extension
-    - fix regel 2 i computerens strategi
     - lav computer ryk til async (push/receive) (l. 187)
 *)

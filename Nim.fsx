@@ -147,7 +147,6 @@ and computer() =
            
            Gui.disable [Gui.heap1;Gui.heap2;Gui.heap3]
            playersTurn <- true
-           printf "so far1"
 
            Async.StartWithContinuations
                (async{let! input = moveComp heaps
@@ -157,15 +156,14 @@ and computer() =
                (fun _ -> eventQ.Post Cancelled),
                ts.Token)
 
-           printf "so good"
-
            let! msg = eventQ.Receive()
            match msg with
            | Legal  -> return! checkStatus() 
            | Error  -> return! initGame()
            | Cancel -> ts.Cancel()
                        return! cancel()
-           | _      -> Gui.showHint "Too fast"
+           | _      -> ts.Cancel()
+                       Gui.showHint "Too fast"
                        return! computer()}
 
 and cancel() = 

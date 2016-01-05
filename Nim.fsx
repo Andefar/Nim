@@ -92,8 +92,8 @@ and ready() =
            | Input (h,i)    -> return! checkInput h i 
            | Clear          -> return! ready()
            | Hint           ->  let opt = NimMap.calcOptimal heaps
-
-                                if hintsLeft > 0 then Gui.showHint ("h"+(string (fst opt)+" m"+(string (snd opt))))
+                                let diff = string ((NimMap.find (fst opt) heaps) - (snd opt))
+                                if hintsLeft > 0 then Gui.showHint ("h"+(string (fst opt)+" m"+ diff))
                                 else Gui.showHint ""
                                 if hintsLeft>0 then hintsLeft <- hintsLeft-1
                                 Gui.showHintsLeft ("hint("+(string hintsLeft)+")")

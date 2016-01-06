@@ -1,14 +1,13 @@
 module Gui
 
-
-open System
 open System.Drawing
 open System.Windows.Forms
 open System.Text.RegularExpressions
 
+
     // The window part
 let window =
-  new Form(Text="Game of Nim", Size=Size(600,350), BackColor=Color.White)
+  new Form(Text="Game of Nim", Size=Size(520,350), BackColor=Color.White)
 
 let messages =
   new Label(Location=Point(60,20),Size=Size(400,25),Text="")
@@ -30,27 +29,27 @@ let heap3Desc =
 
 let heap1 =
   new Button(Location=Point(50,160),MinimumSize=Size(100,40),
-              MaximumSize=Size(100,50),Text="")
+              MaximumSize=Size(100,50),Text="", BackColor=Color.LightBlue)
 
 let heap2 =
   new Button(Location=Point(200,160),MinimumSize=Size(100,40),
-              MaximumSize=Size(100,50),Text="")
+              MaximumSize=Size(100,50),Text="", BackColor=Color.LightBlue)
 
 let heap3 =
   new Button(Location=Point(350,160),MinimumSize=Size(100,40),
-              MaximumSize=Size(100,50),Text="")
+              MaximumSize=Size(100,50),Text="", BackColor=Color.LightBlue)
 
 let cancel =
-  new Button(Location=Point(350,75),MinimumSize=Size(60,25),
-              MaximumSize=Size(100,50),Text="Cancel")
+  new Button(Location=Point(370,75),MinimumSize=Size(60,25),
+              MaximumSize=Size(100,50),Text="Cancel", BackColor=Color.LightCoral)
 
 let newGame =
   new Button(Location=Point(200,220),MinimumSize=Size(100,50),
-              MaximumSize=Size(100,50),Text="Start New Game")
+              MaximumSize=Size(100,50),Text="Start New Game", BackColor=Color.LightGreen)
 
 let hintBut =
-  new Button(Location=Point(420,240),MinimumSize=Size(50,25),
-              MaximumSize=Size(25,25),Text="hint(3)")
+  new Button(Location=Point(400,240),MinimumSize=Size(50,25),
+              MaximumSize=Size(25,25),Text="Hint (3)", BackColor=Color.LightBlue)
 
 let hint =
   new Label(Location=Point(470,240),Size=Size(50,25),Text="")
@@ -97,7 +96,7 @@ let showHintsLeft str =
 let initGui() = 
     window.TopMost <- true
     window.StartPosition <- FormStartPosition.CenterScreen
-
+    window.FormBorderStyle  <- FormBorderStyle.Fixed3D
 
     window.Controls.Add messages
     window.Controls.Add matchDesc

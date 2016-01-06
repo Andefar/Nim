@@ -8,9 +8,7 @@ Januarkursus - 2015
 
 open System 
 open System.Net 
-open System.Threading 
-open System.Windows.Forms 
-open System.Drawing 
+open System.Threading  
 
 let printCollection msg coll =
         printfn "%s:" msg
@@ -39,10 +37,8 @@ type AsyncEventQueue<'T>() =
             tryListen cont)
 
 // Automaton
-
-type heap = string * int
-type Message = 
-    | Input of heap | Cancel | IllegalInput | Legal | Restart | Hint | Error | Cancelled
+type Message = | Input of string * int | Cancel 
+               | IllegalInput | Legal | Restart | Hint | Error | ThreadCancelled
 
 let mutable oldMap = NimMap.make 12
 let mutable heaps = NimMap.make 12
@@ -93,8 +89,10 @@ and ready() =
     async{let b = Gui.input.Focus()
           Gui.enable [Gui.heap1;Gui.heap2;Gui.heap3; Gui.newGame]
           
-          if cancelBool then cancelBool <- false
-          elif not first && playersTurn then Gui.printMessage ("The computer removed "+lastComValue+" matches from heap "+lastComHeap)
+          if not cancelBool && not first && playersTurn then 
+                Gui.printMessage ("The computer removed "+lastComValue+" matches from heap "+lastComHeap)
+          
+          cancelBool <- false
           
           let! input = eventQ.Receive()
           match input with
@@ -128,36 +126,28 @@ and checkStatus() =
            printCollection "" (NimMap.getMap heaps)
            Gui.showInput ""
            Gui.showHint ""
-           if (NimMap.win heaps) then return! finished()
+           if (NimMap.win heaps) then 
+                if playersTurn then return! finished("You WON! :D Wanna try again? Hit the \"Start New Game\"")
+                else                return! finished("The computer WON! :D You should try again? Hit the \"Start New Game\"")
            elif playersTurn then
                 return! ready()
-           else return! computer()
-           }
-
-and finished() = 
-    async {let mutable winner = "You"
-           if playersTurn then winner <- "The computer"
-           Gui.printMessage (winner+" WON! :D wanna try again? hit the \"Start New Game\"")
-           Gui.enable [Gui.newGame]
-           Gui.disable [Gui.heap1;Gui.heap2;Gui.heap3];
-           let! input = eventQ.Receive()
-           match input with
-           | Restart    -> return! initGame()
-           | _          -> failwith("finished: You fool")}
+           else return! computer()}
 
 and computer() = 
-    async {use ts = new CancellationTokenSource()
+    async {Gui.printMessage "Computer is thinking, please wait..."
+           use ts = new CancellationTokenSource()
            
            playersTurn <- true
 
            Gui.disable [Gui.heap1;Gui.heap2;Gui.heap3]
 
+           // code below is matching when the thread is interrupted by actions other than the Cancel Button
            if (cancelBool) then
              let! msg = eventQ.Receive()
              match msg with
-             | Cancelled -> Gui.printMessage "Wait until it's your turn"
-             | _         -> failwith "whaaaaat"
-             cancelBool <- false
+             | ThreadCancelled -> Gui.printMessage "Too fast.. you are interrupting the computer :D "
+                                  cancelBool <- false
+             | _               -> failwith "computer: this should not happen"
            
            Async.StartWithContinuations
                 (async{let! input = moveComp heaps 
@@ -165,7 +155,7 @@ and computer() =
                 (fun input -> eventQ.Post input),
                 (fun _ -> eventQ.Post Error),
                 (fun _ -> cancelBool <- true
-                          eventQ.Post Cancelled),
+                          eventQ.Post ThreadCancelled),
                 ts.Token)
 
            let! msg = eventQ.Receive()
@@ -176,16 +166,24 @@ and computer() =
                        return! cancel()
            | _      -> ts.Cancel()
                        cancelBool <- true
-                       Gui.showHint "Too fast"
                        return! computer()}
 
 and cancel() = 
     async{heaps <- oldMap
           let! msg = eventQ.Receive()
           match msg with
-          | Cancelled | Error -> Gui.printMessage ("You cancelled. Make a match partner ! :=)")
-                                 return! checkStatus()
+          | ThreadCancelled | Error -> Gui.printMessage ("You cancelled. Make a match partner ! :D")
+                                       return! checkStatus()
           | _                 -> failwith ("cancel fail" + string(msg))}
+
+and finished(s) = 
+    async {Gui.printMessage (string(s))
+           Gui.enable [Gui.newGame]
+           Gui.disable [Gui.heap1;Gui.heap2;Gui.heap3;Gui.cancel;Gui.hintBut];
+           let! input = eventQ.Receive()
+           match input with
+           | Restart    -> return! initGame()
+           | _          -> failwith("finished: You fool")}
 
 let addListeners() = 
     Gui.heap1.Click.Add (fun _ -> eventQ.Post (Input ("1",Gui.text())))

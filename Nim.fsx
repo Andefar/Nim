@@ -9,6 +9,8 @@ Januarkursus - 2015
 open System 
 open System.Net 
 open System.Threading  
+open System.Windows.Forms 
+
 
 let printCollection msg coll =
         printfn "%s:" msg
@@ -127,8 +129,8 @@ and checkStatus() =
            Gui.showInput ""
            Gui.showHint ""
            if (NimMap.win heaps) then 
-                if playersTurn then return! finished("You WON! :D Wanna try again? Hit the \"Start New Game\"")
-                else                return! finished("The computer WON! :D You should try again? Hit the \"Start New Game\"")
+                if not playersTurn then return! finished("You WON! :D Wanna try again? Hit the \"Start New Game\"")
+                else                    return! finished("The computer WON! :D You should try again? Hit the \"Start New Game\"")
            elif playersTurn then
                 return! ready()
            else return! computer()}
@@ -204,9 +206,7 @@ startGame()
 
 (*
 TODO list: 
-    - fix Gui.disable så man ikke kan trykke på knapper selvom man har disabled dem
-    - GUI: samle show metoderne til én metode
-    - Lave andre extension
-    - lav computer ryk til async (push/receive) (l. 187)
+    - bug (måske kun mono bug): hvis man står i finished og clicker hint crasher det.
+    - byttet om på players turn (fixet ét sted)
 *)
 

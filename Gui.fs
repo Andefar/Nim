@@ -8,7 +8,7 @@ open System.Text.RegularExpressions
 
     // The window part
 let window =
-  new Form(Text="Game of Nim", Size=Size(525,300))
+  new Form(Text="Game of Nim", Size=Size(600,350), BackColor=Color.White)
 
 let messages =
   new Label(Location=Point(60,20),Size=Size(400,25),Text="")
@@ -67,7 +67,6 @@ let enable bs =
     for (b:Button) in bs do 
         b.Enabled  <- true
 
-
 let updateHeap heap (n:int) = 
     match heap with
     | "1" -> (heap1.Text <- string(n))
@@ -96,6 +95,10 @@ let showHintsLeft str =
     hintBut.TextAlign <- ContentAlignment.MiddleCenter 
 
 let initGui() = 
+    window.TopMost <- true
+    window.StartPosition <- FormStartPosition.CenterScreen
+
+
     window.Controls.Add messages
     window.Controls.Add matchDesc
     window.Controls.Add input

@@ -161,7 +161,8 @@ and computer() =
            let! msg = eventQ.Receive()
            match msg with
            | Legal  -> return! checkStatus() 
-           | Error  -> return! initGame()
+           | Error  -> eventQ.Post Restart
+                       return! finished("An error accured in computer")
            | Cancel -> ts.Cancel()
                        return! cancel()
            | _      -> ts.Cancel()

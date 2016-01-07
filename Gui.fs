@@ -7,7 +7,7 @@ open System.Text.RegularExpressions
 
     // The window part
 let window =
-  new Form(Text="Game of Nim", Size=Size(520,350), BackColor=Color.White)
+  new Form(Text="Game of Nim", Size=Size(520,750), BackColor=Color.White)
 
 let messages =
   new Label(Location=Point(60,20),Size=Size(400,25),Text="")
@@ -51,8 +51,39 @@ let hintBut =
   new Button(Location=Point(400,240),MinimumSize=Size(50,25),
               MaximumSize=Size(25,25),Text="Hint (3)", BackColor=Color.LightBlue)
 
-let hint =
-  new Label(Location=Point(470,240),Size=Size(50,25),Text="")
+let bmpPicture = new Bitmap("/Users/AndreasLauritzen/Documents/Skole/DTU/nim/hot.gif")
+let dead = new Bitmap("/Users/AndreasLauritzen/Documents/Skole/DTU/nim/not.gif")
+
+
+
+let mutable heapList1 = []
+let mutable heapList2 = []
+let mutable heapList3 = []
+
+for x in [90;240;390] do
+    
+    for y in 1..12 do
+        let stick = new Button(Location=Point(x,300+(y*30)),Size=Size(18,18))
+        stick.BackgroundImage <- bmpPicture
+        if x = 90 then heapList1 <- List.append heapList1 [stick]
+        if x = 240 then heapList2 <- List.append heapList2 [stick]
+        if x = 390 then heapList3 <- List.append heapList3 [stick]
+        window.Controls.Add stick
+
+    
+
+let removeMatches (heap:string) n =
+    let mutable m = 0
+    let mutable curHeap = []
+    if heap = "1" then curHeap <- heapList1
+    if heap = "2" then curHeap <- heapList2
+    if heap = "3" then curHeap <- heapList3
+    for (mat:Button) in curHeap do 
+        if (m % 12 < (12-n)) then mat.BackgroundImage <- dead
+        m <- m + 1
+
+
+let hint = new Label(Location=Point(470,240),Size=Size(50,25),Text="")
 
 let disable bs = 
     for b in [heap1;heap2;heap2] do 
@@ -67,6 +98,7 @@ let enable bs =
         b.Enabled  <- true
 
 let updateHeap heap (n:int) = 
+    if (n < 12) then removeMatches heap n
     match heap with
     | "1" -> (heap1.Text <- string(n))
     | "2" -> (heap2.Text <- string(n))

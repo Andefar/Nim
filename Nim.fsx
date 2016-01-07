@@ -90,7 +90,7 @@ let rec initGame() =
 
 and ready() = 
     async{let b = Gui.input.Focus()
-          Gui.enable [Gui.heap1;Gui.heap2;Gui.heap3; Gui.newGame]
+          Gui.enable (Gui.heaps@[Gui.newGame])
           
           if not cancelBool && not first && playersTurn then 
                 Gui.printMessage ("The computer removed "+lastComValue+" matches from heap "+lastComHeap)
@@ -140,7 +140,7 @@ and computer() =
     async {Gui.printMessage "Computer is thinking, please wait..."
            use ts = new CancellationTokenSource()
            
-           Gui.disable [Gui.heap1;Gui.heap2;Gui.heap3]
+           Gui.disable Gui.heaps
 
            // code below is matching when the thread is interrupted by actions other than the Cancel Button
            if (cancelBool) then
@@ -182,16 +182,19 @@ and cancel() =
 and finished(s) = 
     async {Gui.printMessage (string(s))
            Gui.enable [Gui.newGame]
-           Gui.disable [Gui.heap1;Gui.heap2;Gui.heap3;Gui.cancel;Gui.hintBut];
+           Gui.disable (Gui.heaps@[Gui.cancel;Gui.hintBut]);
            let! input = eventQ.Receive()
            match input with
            | Restart    -> return! initGame()
            | _          -> failwith("finished: You fool")}
 
 let addListeners() = 
-    Gui.heap1.Click.Add (fun _ -> eventQ.Post (Input ("1",Gui.text())))
-    Gui.heap2.Click.Add (fun _ -> eventQ.Post (Input ("2",Gui.text())))
-    Gui.heap3.Click.Add (fun _ -> eventQ.Post (Input ("3",Gui.text())))
+    for x in Gui.heaps do
+        x.Click.Add (fun _ -> eventQ.Post (Input (string((List.findIndex (fun elem -> elem = x) Gui.heaps) + 1),Gui.text())))
+
+//    Gui.heap1.Click.Add (fun _ -> eventQ.Post (Input ("1",Gui.text())))
+//    Gui.heap2.Click.Add (fun _ -> eventQ.Post (Input ("2",Gui.text())))
+//    Gui.heap3.Click.Add (fun _ -> eventQ.Post (Input ("3",Gui.text())))
     Gui.cancel.Click.Add (fun _ -> eventQ.Post Cancel)
     Gui.newGame.Click.Add (fun _ -> eventQ.Post Restart)
     Gui.hintBut.Click.Add (fun _ -> eventQ.Post Hint)

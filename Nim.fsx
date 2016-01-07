@@ -13,7 +13,6 @@ open System.Windows.Forms
 
 
 let printCollection msg coll =
-        printfn "%s:" msg
         Seq.iteri (fun index item -> printfn "  %i: %O" index item) coll
        
 // An asynchronous event queue kindly provided by Don Syme 
@@ -50,6 +49,8 @@ let mutable cancelBool = false
 let mutable illegalAction = false
 let mutable lastComHeap = ""
 let mutable lastComValue = ""
+let mutable lastPlayerHeap = ""
+let mutable lastPlayerValue = 0
 let mutable hintsLeft = 3
 
 let eventQ = AsyncEventQueue()
@@ -76,6 +77,7 @@ let moveComp map =
           return Legal}
 
 let updateGUI map = Map.iter (fun key value -> Gui.updateHeap key value) (NimMap.getMap map)
+                    
 
 let rec initGame() =
     async{Gui.printMessage "Welcome! Enter number of matches you want to remove and select a heap"
@@ -90,7 +92,7 @@ let rec initGame() =
 
 and ready() = 
     async{let b = Gui.input.Focus()
-          Gui.enable (Gui.heaps@[Gui.newGame])
+          Gui.disable []
           
           if not cancelBool && not first && playersTurn then 
                 Gui.printMessage ("The computer removed "+lastComValue+" matches from heap "+lastComHeap)
@@ -119,14 +121,14 @@ and checkInput h i =
            Async.StartImmediate (checkValidInputAndMove h i heaps)
            let! input = eventQ.Receive()
            match input with
-           | Legal          -> return! checkStatus()
+           | Legal          -> lastPlayerHeap <- h
+                               lastPlayerValue <- i
+                               return! checkStatus()
            | IllegalInput   -> return! ready()
            | _              -> failwith "checkinput failed"}
 
 and checkStatus() = 
-    async {printfn "%b" playersTurn
-           updateGUI heaps
-           printCollection "" (NimMap.getMap heaps)
+    async {updateGUI heaps
            Gui.showInput ""
            Gui.showHint ""
            if (NimMap.win heaps) then 
@@ -192,9 +194,6 @@ let addListeners() =
     for x in Gui.heaps do
         x.Click.Add (fun _ -> eventQ.Post (Input (string((List.findIndex (fun elem -> elem = x) Gui.heaps) + 1),Gui.text())))
 
-//    Gui.heap1.Click.Add (fun _ -> eventQ.Post (Input ("1",Gui.text())))
-//    Gui.heap2.Click.Add (fun _ -> eventQ.Post (Input ("2",Gui.text())))
-//    Gui.heap3.Click.Add (fun _ -> eventQ.Post (Input ("3",Gui.text())))
     Gui.cancel.Click.Add (fun _ -> eventQ.Post Cancel)
     Gui.newGame.Click.Add (fun _ -> eventQ.Post Restart)
     Gui.hintBut.Click.Add (fun _ -> eventQ.Post Hint)
@@ -207,10 +206,3 @@ let startGame() =
 //    Application.Run(Gui.window)
  
 startGame()
-
-(*
-TODO list: 
-    - bug (måske kun mono bug): hvis man står i finished og clicker hint crasher det.
-    - byttet om på players turn (fixet ét sted)
-*)
-

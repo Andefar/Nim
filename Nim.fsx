@@ -77,6 +77,7 @@ let updateGUI map = Map.iter (fun key value -> Gui.updateHeap key value) (NimMap
 
 let rec initGame() =
     async{Gui.printMessage "Welcome! Enter number of matches you want to remove and select a heap"
+          playersTurn <- true
           heaps <- NimMap.make 12
           first <- true
           hintsLeft <- 3
@@ -127,8 +128,8 @@ and checkStatus() =
            Gui.showInput ""
            Gui.showHint ""
            if (NimMap.win heaps) then 
-                if playersTurn then return! finished("You WON! :D Wanna try again? Hit the \"Start New Game\"")
-                else                return! finished("The computer WON! :D You should try again? Hit the \"Start New Game\"")
+                if playersTurn then return! finished("The computer WON! :D You should try again? Hit the \"Start New Game\"")
+                else                return! finished("You WON! :D Wanna try again? Hit the \"Start New Game\"")
            elif playersTurn then
                 return! ready()
            else return! computer()}
@@ -137,8 +138,6 @@ and computer() =
     async {Gui.printMessage "Computer is thinking, please wait..."
            use ts = new CancellationTokenSource()
            
-           playersTurn <- true
-
            Gui.disable [Gui.heap1;Gui.heap2;Gui.heap3]
 
            // code below is matching when the thread is interrupted by actions other than the Cancel Button
@@ -160,13 +159,14 @@ and computer() =
 
            let! msg = eventQ.Receive()
            match msg with
-           | Legal  -> return! checkStatus() 
+           | Legal  -> playersTurn <- true
+                       return! checkStatus() 
            | Error  -> eventQ.Post Restart
                        return! finished("An error accured in computer")
            | Cancel -> ts.Cancel()
+                       playersTurn <- true
                        return! cancel()
            | _      -> ts.Cancel()
-                       cancelBool <- true
                        return! computer()}
 
 and cancel() = 
